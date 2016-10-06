@@ -29,10 +29,10 @@ import (
 	"net"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	"gopkg.in/errgo.v1"
-	log "gopkg.in/hockeypuck/logrus.v0"
 
-	cf "gopkg.in/hockeypuck/conflux.v2"
+	cf "github.com/simia-tech/conflux"
 )
 
 const GOSSIP = "gossip"

@@ -1,7 +1,7 @@
 package leveldb
 
 import (
-	"gopkg.in/hockeypuck/conflux.v2/recon"
+	"github.com/simia-tech/conflux/recon"
 )
 
 type Config struct {

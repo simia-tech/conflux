@@ -36,8 +36,8 @@ import (
 
 	"github.com/syndtr/goleveldb/leveldb"
 
-	cf "gopkg.in/hockeypuck/conflux.v2"
-	"gopkg.in/hockeypuck/conflux.v2/recon"
+	cf "github.com/simia-tech/conflux"
+	"github.com/simia-tech/conflux/recon"
 )
 
 type prefixTree struct {

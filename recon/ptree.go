@@ -180,6 +180,10 @@ func (t *MemPrefixTree) Remove(z *cf.Zp) error {
 	return nil
 }
 
+func (t *MemPrefixTree) Len() int {
+	return t.allElements.Len()
+}
+
 type MemPrefixNode struct {
 	// All nodes share the tree definition as a common context
 	*MemPrefixTree

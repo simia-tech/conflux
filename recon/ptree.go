@@ -180,6 +180,10 @@ func (t *MemPrefixTree) Remove(z *cf.Zp) error {
 	return nil
 }
 
+func (t *MemPrefixTree) Items() []*cf.Zp {
+	return t.allElements.Items()
+}
+
 func (t *MemPrefixTree) Len() int {
 	return t.allElements.Len()
 }

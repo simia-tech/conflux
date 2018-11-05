@@ -30,7 +30,7 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/errgo.v1"
 	"gopkg.in/tomb.v2"
 

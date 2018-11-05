@@ -11,8 +11,8 @@ import (
 	"github.com/simia-tech/conflux"
 )
 
-func (p *Peer) Reconcilate(limit int) ([][]byte, bool, error) {
-	conn, err := net.Dial(string(p.settings.ReconNet), p.settings.ReconAddr)
+func (p *Peer) Reconcilate(network, address string, limit int) ([][]byte, bool, error) {
+	conn, err := net.Dial(network, address)
 	if err != nil {
 		return nil, false, err
 	}

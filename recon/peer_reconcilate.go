@@ -40,14 +40,14 @@ func (p *Peer) Reconcilate(network, address string, limit int) ([][]byte, bool, 
 	return result, done, nil
 }
 
-func (p *Peer) reconcilate(conn net.Conn, remoteConfig *Config, limit int) (*conflux.ZSet, bool, error) {
+func (p *Peer) reconcilate(conn Conn, remoteConfig *Config, limit int) (*conflux.ZSet, bool, error) {
 	w := bufio.NewWriter(conn)
 	localNeeds := conflux.NewZSet()
 
 	count := 0
 	pendingMessages := []ReconMsg{}
 	for count < limit {
-		p.setReadDeadline(conn, defaultTimeout)
+		p.setReadDeadline("CLIENT", conn, defaultTimeout)
 		message, err := ReadMsg(conn)
 		if err != nil {
 			return nil, false, errors.Wrap(err, "read messagw failed")

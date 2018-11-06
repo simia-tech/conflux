@@ -197,7 +197,7 @@ func (p *Peer) interactWithServer(conn net.Conn) msgProgressChan {
 		var resp *msgProgress
 		var n int
 		for (resp == nil || resp.err == nil) && n < maxRecoverSize {
-			p.setReadDeadline(conn, defaultTimeout)
+			p.setReadDeadline("CLIENT", conn, defaultTimeout)
 			msg, err := ReadMsg(conn)
 			if err != nil {
 				p.logErr(GOSSIP, err).Error("interact: read msg")

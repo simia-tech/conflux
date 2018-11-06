@@ -320,16 +320,33 @@ func (p *Peer) Serve() error {
 
 var defaultTimeout = 300 * time.Second
 
-func (p *Peer) setReadDeadline(conn net.Conn, d time.Duration) {
-	err := conn.SetReadDeadline(time.Now().Add(d))
-	if err != nil {
-		log.Warningf("failed to set read deadline: %v")
+func (p *Peer) setReadDeadline(label string, o interface{}, d time.Duration) {
+	co, ok := o.(interface {
+		SetReadDeadline(time.Time) error
+	})
+	if !ok {
+		return
+	}
+	if err := co.SetReadDeadline(time.Now().Add(d)); err != nil {
+		p.logErr(label, err)
 	}
 }
 
-func (p *Peer) handleConfig(conn net.Conn, role string, failResp string) (_ *Config, _err error) {
+func (p *Peer) setWriteDeadline(label string, o interface{}, d time.Duration) {
+	co, ok := o.(interface {
+		SetWriteDeadline(time.Time) error
+	})
+	if !ok {
+		return
+	}
+	if err := co.SetWriteDeadline(time.Now().Add(d)); err != nil {
+		p.logErr(label, err)
+	}
+}
+
+func (p *Peer) handleConfig(conn Conn, role string, failResp string) (_ *Config, _err error) {
 	w := bufio.NewWriter(conn)
-	p.setReadDeadline(conn, defaultTimeout)
+	p.setReadDeadline(role, conn, defaultTimeout)
 
 	config, err := p.settings.Config()
 	if err != nil {
@@ -400,10 +417,7 @@ func (p *Peer) handleConfig(conn net.Conn, role string, failResp string) (_ *Con
 	}
 
 	if failResp != "" {
-		err = conn.SetWriteDeadline(time.Now().Add(3 * time.Second))
-		if err != nil {
-			p.logErr(role, err)
-		}
+		p.setWriteDeadline(role, conn, 3*time.Second)
 
 		err = WriteString(w, RemoteConfigFailed)
 		if err != nil {
@@ -539,7 +553,7 @@ type reconWithClient struct {
 	bottomQ  []*bottomEntry
 	rcvrSet  *cf.ZSet
 	flushing bool
-	conn     net.Conn
+	conn     Conn
 	bwr      *bufio.Writer
 	messages []ReconMsg
 }
@@ -676,9 +690,9 @@ func (rwc *reconWithClient) flushQueue() error {
 
 var zeroTime time.Time
 
-func (p *Peer) interactWithClient(conn net.Conn, remoteConfig *Config, bitstring *cf.Bitstring) error {
+func (p *Peer) interactWithClient(conn Conn, remoteConfig *Config, bitstring *cf.Bitstring) error {
 	p.log(SERVE).Debug("interacting with client")
-	p.setReadDeadline(conn, defaultTimeout)
+	p.setReadDeadline("SERVE", conn, defaultTimeout)
 
 	recon := reconWithClient{
 		Peer:    p,
@@ -724,7 +738,7 @@ func (p *Peer) interactWithClient(conn net.Conn, remoteConfig *Config, bitstring
 			var hasMsg bool
 
 			// Set a small read timeout to simulate non-blocking I/O
-			p.setReadDeadline(conn, time.Millisecond)
+			p.setReadDeadline("SERVE", conn, time.Millisecond)
 			if err != nil {
 				return errgo.Mask(err)
 			}
@@ -732,7 +746,7 @@ func (p *Peer) interactWithClient(conn net.Conn, remoteConfig *Config, bitstring
 			hasMsg = (nbErr == nil)
 
 			// Restore blocking I/O
-			p.setReadDeadline(conn, defaultTimeout)
+			p.setReadDeadline("SERVE", conn, defaultTimeout)
 			if err != nil {
 				return errgo.Mask(err)
 			}
@@ -752,7 +766,7 @@ func (p *Peer) interactWithClient(conn net.Conn, remoteConfig *Config, bitstring
 					}
 				} else {
 					recon.popBottom()
-					p.setReadDeadline(conn, 3*time.Second)
+					p.setReadDeadline("SERVE", conn, 3*time.Second)
 					msg, err = ReadMsg(conn)
 					if err != nil {
 						return errgo.Mask(err)
@@ -777,7 +791,7 @@ func (p *Peer) interactWithClient(conn net.Conn, remoteConfig *Config, bitstring
 	return nil
 }
 
-func (p *Peer) sendItems(items []*cf.Zp, conn net.Conn, remoteConfig *Config) error {
+func (p *Peer) sendItems(items []*cf.Zp, conn Conn, remoteConfig *Config) error {
 	if len(items) > 0 && p.t.Alive() {
 		select {
 		case p.RecoverChan <- &Recover{

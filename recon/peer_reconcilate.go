@@ -3,7 +3,6 @@ package recon
 import (
 	"bufio"
 	"log"
-	"net"
 
 	"gopkg.in/errgo.v1"
 
@@ -11,13 +10,7 @@ import (
 	"github.com/simia-tech/conflux"
 )
 
-func (p *Peer) Reconcilate(network, address string, limit int) ([][]byte, bool, error) {
-	conn, err := net.Dial(network, address)
-	if err != nil {
-		return nil, false, err
-	}
-	defer conn.Close()
-
+func (p *Peer) Reconcilate(conn Conn, limit int) ([][]byte, bool, error) {
 	remoteConfig, err := p.handleConfig(conn, GOSSIP, "")
 	if err != nil {
 		return nil, false, errors.Wrap(err, "handle config failed")

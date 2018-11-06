@@ -472,7 +472,7 @@ func (p *Peer) handleConfig(conn Conn, role string, failResp string) (_ *Config,
 	return remoteConfig, nil
 }
 
-func (p *Peer) Accept(conn net.Conn) (_err error) {
+func (p *Peer) Accept(conn Conn) (_err error) {
 	defer conn.Close()
 
 	p.logFields(SERVE, log.Fields{
